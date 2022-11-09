@@ -467,7 +467,7 @@ function combatEvent(enemy, instance) {
   }
 }
 
-//------------------Main Game & Loop -------------------------------//
+//---Main Game & Loop ---//
 let instances = [
   "Sokyoku Hill",
   "Central 46",
