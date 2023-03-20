@@ -1,6 +1,7 @@
 const readline = require("readline-sync");
 let gearArray = require("./armor");
 
+// ---Characters/Props--- //
 function Player(name) {
   this.name = name;
   this.hp = 25;
@@ -9,8 +10,6 @@ function Player(name) {
   this.exp = 0;
   this.nextLevel = 25;
   this.equipped = {
-    mainHand: {},
-    offHand: {},
     head: {},
     chest: {},
     legs: {},
@@ -23,7 +22,6 @@ function Player(name) {
   this.prone = false;
 }
 
-//use prototype to create base captain, use alt captain generator to populate captain
 function Captain(type, modifier, hp, level, attack, armor, expGiven) {
   this.type = type;
   this.modifier = modifier;
@@ -35,7 +33,6 @@ function Captain(type, modifier, hp, level, attack, armor, expGiven) {
   this.expGiven = expGiven;
   this.isAlive = true;
   this.prone = false;
-  // this.equipped = equipped;
 }
 
 function Armor(name, type, armor, slot, rarity) {
@@ -46,27 +43,7 @@ function Armor(name, type, armor, slot, rarity) {
   this.rarity = rarity;
 }
 
-function equipGear(item) {
-  //takes in gear object, adds name to char gear, adjusts modifiers
-  //add gear to 'equipped' group
-  player.equipped[item.slot] = item;
-  player.armor += item.armor;
-  console.log(player.name + " has equipped " + player.equipped[item.slot].name);
-  //modify attack or armor
-}
-
-function removeGear(item) {
-  //remove type of gear
-  //modify attack/armor
-  console.log(player.name + " has unequipped " + item.name);
-  player.equipped[item.slot] = {};
-  player.armor -= item.armor;
-  player.inventory.push(item);
-}
-
 function checkLevelUp() {
-  //time to level up!
-
   if (player.exp >= player.nextLevel) {
     player.level++;
     player.maxhp += Math.round((player.hp * level) / 8);
@@ -79,8 +56,7 @@ function checkLevelUp() {
 }
 
 function getRandomNum(n) {
-  // takes n as the high parameter, generates random number
-  randomNumber = Math.floor(Math.random() * n);
+  let randomNumber = Math.floor(Math.random() * n);
   return parseInt(randomNumber);
 }
 
@@ -155,7 +131,6 @@ function getArmor() {
     armorTemp.slot,
     armorTemp.rarity
   );
-  // console.log(gear.name + " has been generated!")
   return gear;
 }
 
@@ -174,9 +149,6 @@ function spawnEnemy() {
   let armor = 2 * level;
   let enemy = new Captain(type, modifier, hp, level, attack, armor, expGiven);
   let instance = false;
-  //get modifier
-  //get type
-  //populate hp, level, exp given, equipped
   combatEvent(enemy, instance);
 }
 
@@ -248,17 +220,6 @@ function getModifier(n) {
 }
 // ----COMBAT ---//
 
-function killedEnemy(enemy) {
-  player.captainsKilled.push(enemy);
-  player.exp += enemy.expGiven;
-  console.log(player.name + " gained " + enemy.expGiven + "exp!");
-  checkLevelUp();
-  items = lootGenerator(enemy);
-  if (items) {
-    equipLoot(items);
-  }
-}
-
 function equipLoot(items) {
   for (i = 0; i < items.length; i++) {
     items[i].type == "armor"
@@ -303,7 +264,6 @@ function playerAttack(enemy, proneEnemy, instance) {
     if (damage < 0) {
       damage = 0;
     }
-    // console.log(player.name + " attackVal: " + attackVal + " armorCheck: " + armorCheck + " damage: " + damage)
     console.log(
       player.name +
         " attacks for " +
@@ -312,8 +272,6 @@ function playerAttack(enemy, proneEnemy, instance) {
         attackVal +
         " armorCheck: " +
         armorCheck +
-        " damage: " +
-        damage +
         ")\n"
     );
     enemy.hp -= damage;
@@ -334,24 +292,9 @@ function playerAttack(enemy, proneEnemy, instance) {
         console.log("You flee from battle!\n");
         escapeBattle(enemy);
       } else {
-        console.log("You fail to escape!\n");
-        prone = true;
-        changeProneState(player, prone);
-        return false;
+        console.log("Nice try ryoka, not this time!\n");
       }
     }
-  }
-}
-
-function escapeBattle(enemy) {
-  enemy.isAlive = false;
-}
-
-function changeProneState(entity, prone) {
-  if (entity == player) {
-    player.prone = prone;
-  } else {
-    enemy.prone = prone;
   }
 }
 
@@ -375,7 +318,7 @@ function enemyAttack(prone, enemy) {
     }
     armorCheck = Math.round((getRandomNum(100) / 100) * player.armor);
     damage = attackVal - armorCheck;
-    // console.log(enemy.type + " attackVal: " + attackVal + " armorCheck: " + armorCheck + " damage: " + damage)
+
     if (damage < 0) {
       damage = 0;
     }
@@ -389,8 +332,6 @@ function enemyAttack(prone, enemy) {
         attackVal +
         " armorCheck: " +
         armorCheck +
-        " damage: " +
-        damage +
         ")\n"
     );
     player.hp -= damage;
@@ -401,6 +342,10 @@ function enemyAttack(prone, enemy) {
   }
 }
 
+function escapeBattle(enemy) {
+  enemy.isAlive = false;
+}
+
 function playerDead(player) {
   console.log(player.name + " has died...");
   console.log("Level attained: " + player.level);
@@ -409,6 +354,17 @@ function playerDead(player) {
     console.log("Equipment: " + player.equipped[i]);
   }
   module.exports.player = player;
+}
+
+function killedEnemy(enemy) {
+  player.captainsKilled.push(enemy);
+  player.exp += enemy.expGiven;
+  console.log(player.name + " gained " + enemy.expGiven + " exp!");
+  checkLevelUp();
+  items = lootGenerator(enemy);
+  if (items) {
+    equipLoot(items);
+  }
 }
 
 function combatEvent(enemy, instance) {
@@ -475,49 +431,6 @@ let instances = [
   "Shino Academy",
 ];
 
-function generateInstance(instanceType) {
-  console.clear(
-    "You have entered the " + instanceType + ", You sense danger..."
-  );
-  numberOfEnemies = getRandomNum(10);
-  if (numberOfEnemies < 4) {
-    numberOfEnemies = 4;
-  }
-  let enemyType = enemies[getRandomNum(enemies.length)];
-  let modifierInterval = 100 / numberOfEnemies;
-  let enemyLevel = 1;
-  for (let i = 0; i <= numberOfEnemies; i++) {
-    if (player.isAlive) {
-      spawnInstanceEnemy(enemyLevel, enemyType);
-      enemyLevel += modifierInterval;
-      console.log("You continue deeper into the " + instanceType + "...\n");
-    }
-  }
-  if (player.isAlive) {
-    console.log("You have reached the end of the " + instanceType);
-    console.log("You have discovered a treasure chest!!");
-    let items = treasureGenerator();
-    if (items.length > 0) equipLoot(items);
-  }
-}
-
-function spawnInstanceEnemy(modifier, type) {
-  modifier = getModifier(modifier);
-  type = type;
-  level = generateLevel(modifier);
-  // hp = 5 * level;
-  hp = generateHP(level, modifier);
-  expGiven = 5 * level;
-  attack = 3 * level; //can make this more dynamic later
-  armor = 1 * level;
-  let enemy = new Captain(type, modifier, hp, level, attack, armor, expGiven);
-  instance = true;
-  //get modifier
-  //get type
-  //populate hp, level, exp given, equipped
-  combatEvent(enemy, instance);
-}
-
 function generateEvent() {
   let randomNumber = getRandomNum(100);
 
@@ -557,7 +470,7 @@ function getUserInput() {
       { limit: "wiq" }
     );
     if (response === "i") {
-      logCharStatus();
+      battleStats();
     }
     if (response === "q") {
       player.isAlive = false;
@@ -566,7 +479,7 @@ function getUserInput() {
   return response;
 }
 
-function logCharStatus() {
+function battleStats() {
   console.log(
     player.name +
       "\nHP: " +
@@ -582,6 +495,7 @@ function logCharStatus() {
   );
 }
 
+// ---Actual Game Commands---//
 let name = readline.question(
   "You have no business here in The Soul Society! what is your name ryoka? "
 );
@@ -589,7 +503,7 @@ let name = readline.question(
 let player = new Player(name);
 
 console.log(
-  "You are a Substitute Soul Reaper, who obatained the power by have a another Soul Reaper thrust their Zanpakuto on your chest. You are now in The Soul Society to save the Soul Reaper turn friend Rukia, who gave you this power, from execution. Find her and save her from the clutches of death!"
+  "---------- \nYou are a Substitute Soul Reaper, who obatained the power by having a another Soul Reaper thrust their Zanpakuto into your chest. You are now in The Soul Society to save the Soul Reaper turn friend Rukia, who gave you this power, from execution. Get  to Sokyoku Hill and save her from the clutches of death!\n----------"
 );
 
 let begin = readline.keyIn("Press 'w' to continue\n", { limit: "w" });
